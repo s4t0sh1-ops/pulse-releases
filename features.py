@@ -29,7 +29,7 @@ class Features:
         self.resume_position=0;self.recoveries=0;self.last_advance=time.monotonic();self.last_stats_save=0
         self.suggestion_seq=0;self.artist_info=None;self.artist_page_index=0;self.extra_pages=[];self.home_reco_loading=False;self.home_rows=[]
         super().__init__()
-        self.setWindowTitle('Pulse 0.15 · '+self.theme.get('title','Pulse'))
+        self.setWindowTitle('Pulse 0.16 · '+self.theme.get('title','Pulse'))
         asset=Path(getattr(sys,'_MEIPASS',Path(__file__).parent))/'pulse.ico'
         if asset.exists():
             icon=QIcon(str(asset));self.setWindowIcon(icon);QApplication.instance().setWindowIcon(icon)
@@ -130,24 +130,12 @@ class Features:
         self.backgrounds.selector.currentIndexChanged.connect(self.update_background_controls);self.update_background_controls()
         layout.addSpacing(14);layout.addWidget(QLabel('Воспроизведение'))
         self.repeat_select=QComboBox();self.repeat_select.addItems(['Без повтора','Повторять очередь','Повторять один трек']);self.repeat_select.currentIndexChanged.connect(lambda i:setattr(self,'repeat_mode',i));layout.addWidget(self.repeat_select)
-        self.sleep_select=QComboBox();self.sleep_select.addItems(['Таймер сна выключен','Через 15 минут','Через 30 минут','Через 60 минут','Через 90 минут']);self.sleep_select.currentIndexChanged.connect(lambda i:self.set_sleep([0,15,30,60,90][i]));layout.addWidget(self.sleep_select)
-        self.sleep_timer=QTimer(self);self.sleep_timer.setSingleShot(True);self.sleep_timer.timeout.connect(self.sleep_now)
-
     def update_background_controls(self):
         self.vortex_controls.setVisible(self.backgrounds.data['effect']=='vortex')
 
     def change_theme(self,key,value):
         super().change_theme(key,value)
         if hasattr(self,'backgrounds'):self.backgrounds.apply()
-
-    def set_sleep(self,minutes):
-        self.sleep_timer.stop();self.sleep_deadline=time.monotonic()+minutes*60 if minutes else 0
-        if minutes:self.sleep_timer.start(minutes*60000)
-
-    def sleep_now(self):
-        self.sleep_timer.stop()
-        self.want_playing=False;self.media.pause();self.sleep_deadline=0
-        self.sleep_select.setCurrentIndex(0);self.status.setText('Таймер сна · воспроизведение приостановлено')
 
     def hide_pages(self):
         if hasattr(self,'content_host'):

@@ -15,6 +15,8 @@ def soundcloud_path(value):
     return '/'+('/'.join(parts))
 
 def urls_from_text(text):
+    value=text.strip()
+    if re.fullmatch(r'@?[A-Za-z0-9_-]{2,100}',value):text='https://soundcloud.com/'+value.lstrip('@')
     found=re.findall(r'https://(?:www\.|m\.)?soundcloud\.com/[^\s<>"\x27,;\\]+',text)
     result=[];seen=set()
     for url in found:

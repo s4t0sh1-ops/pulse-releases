@@ -1,5 +1,6 @@
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
+from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QVBoxLayout,QLabel,QPlainTextEdit,QFileDialog,QProgressBar
 from pages import InAppPage
 from soundcloud_import import SoundCloudImport,urls_from_text,urls_from_file,ImportInputError
@@ -16,9 +17,10 @@ class ImportUI:
     def open_soundcloud_import(self):
         if hasattr(self,'sc_import_page'):self.sc_import_page.show();return
         self.sc_import_page=InAppPage(self.content_host,'Импорт из SoundCloud');box=QVBoxLayout(self.sc_import_page.body);box.setContentsMargins(24,18,24,24);box.setSpacing(14)
-        hint=QLabel('Вставь ссылку на свой профиль, лайки, публичный плейлист или отдельные треки. Они добавятся в любимые Pulse без дубликатов.');hint.setWordWrap(True);box.addWidget(hint)
-        self.sc_import_urls=QPlainTextEdit();self.sc_import_urls.setPlaceholderText('https://soundcloud.com/твой-профиль\nили ссылки на треки — по одной в строке');self.sc_import_urls.setMinimumHeight(130);self.sc_import_urls.setMaximumHeight(190);box.addWidget(self.sc_import_urls)
-        self.sc_import_start=self.button('Добавить в любимые',self.begin_soundcloud_import,primary=True);box.addWidget(self.sc_import_start)
+        hint=QLabel('Введи имя профиля SoundCloud или вставь ссылку на него. Мы найдём открытые лайки и добавим их в любимое без повторов.');hint.setWordWrap(True);box.addWidget(hint)
+        self.sc_import_urls=QPlainTextEdit();self.sc_import_urls.setPlaceholderText('Имя профиля или ссылка SoundCloud');self.sc_import_urls.setMinimumHeight(64);self.sc_import_urls.setMaximumHeight(86);box.addWidget(self.sc_import_urls)
+        box.addWidget(self.button('Вставить из буфера',lambda:self.sc_import_urls.setPlainText(QApplication.clipboard().text())))
+        self.sc_import_start=self.button('Импортировать лайки',self.begin_soundcloud_import,primary=True);box.addWidget(self.sc_import_start)
         self.sc_import_file=self.button('Выбрать CSV / JSON / TXT со ссылками',self.choose_soundcloud_import_file);box.addWidget(self.sc_import_file)
         self.sc_import_progress=QProgressBar();self.sc_import_progress.hide();box.addWidget(self.sc_import_progress)
         self.sc_import_status=QLabel();self.sc_import_status.setWordWrap(True);box.addWidget(self.sc_import_status)
@@ -35,7 +37,7 @@ class ImportUI:
     def begin_soundcloud_import(self,urls=None):
         if self.sc_import_running:return
         if not isinstance(urls,list):urls=urls_from_text(self.sc_import_urls.toPlainText())
-        if not urls:self.sc_import_status.setText('Добавь полную ссылку https://soundcloud.com/…');return
+        if not urls:self.sc_import_status.setText('Введи имя профиля или ссылку на SoundCloud');return
         self.sc_import_generation+=1;generation=self.sc_import_generation;self.sc_import_running=True
         self.sc_import_start.setEnabled(False);self.sc_import_file.setEnabled(False);self.sc_import_cancel.show();self.sc_import_progress.show();self.sc_import_progress.setValue(0);self.sc_import_status.setText('Читаю доступные треки SoundCloud…')
         service=SoundCloudImport(self.soundcloud)
