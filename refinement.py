@@ -35,7 +35,7 @@ class Refinement:
         try:
             self.wave_history=json.loads((self.data_dir/'wave-history.json').read_text(encoding='utf8'))
         except (OSError,ValueError):pass
-        self.setWindowTitle('Pulse 0.14')
+        self.setWindowTitle('Pulse 0.15')
         self.root.installEventFilter(self);self.installEventFilter(self)
         QTimer.singleShot(0,lambda:self.round_window())
 
@@ -70,8 +70,10 @@ class Refinement:
         def done(identity):
             if generation!=self.identity_generation or getattr(self,'closing',False):return
             self.cancel_identity()
-            self.profile.update(id=self.profile.get('id',str(uuid.uuid4())),name=identity['name'],email=identity.get('email',''),provider=identity['provider'],provider_id=identity['provider_id'])
+            if hasattr(self,'profile_for_identity'):self.profile=self.profile_for_identity(identity)
+            else:self.profile.update(id=self.profile.get('id',str(uuid.uuid4())),name=identity['name'],email=identity.get('email',''),provider=identity['provider'],provider_id=identity['provider_id'])
             self.save_data('profile.json',self.profile);self.name_edit.setText(self.profile['name']);self.profile_email.setText(self.profile.get('email') or 'Telegram · профиль подтверждён')
+            if hasattr(self,'bio_edit'):self.bio_edit.setText(self.profile.get('bio',''))
             self.profile_nav.setToolTip(self.profile['name']+' · профиль');self.registration.accept();self.set_registration_gate(False);self.maybe_tour()
         def launch(url):
             if generation!=self.identity_generation:return

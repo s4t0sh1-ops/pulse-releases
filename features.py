@@ -29,7 +29,7 @@ class Features:
         self.resume_position=0;self.recoveries=0;self.last_advance=time.monotonic();self.last_stats_save=0
         self.suggestion_seq=0;self.artist_info=None;self.artist_page_index=0;self.extra_pages=[];self.home_reco_loading=False;self.home_rows=[]
         super().__init__()
-        self.setWindowTitle('Pulse 0.14 · '+self.theme.get('title','Pulse'))
+        self.setWindowTitle('Pulse 0.15 · '+self.theme.get('title','Pulse'))
         asset=Path(getattr(sys,'_MEIPASS',Path(__file__).parent))/'pulse.ico'
         if asset.exists():
             icon=QIcon(str(asset));self.setWindowIcon(icon);QApplication.instance().setWindowIcon(icon)
@@ -388,6 +388,7 @@ class Features:
             return [self.track_data(item.track) for item in (session.sequence or []) if item.track and item.track.available]
         def done(rows):
             self.home_reco_loading=False
+            if self.client is not client:return
             self.home_rows=rows
             if self.view!='home':return
             self.render(rows)

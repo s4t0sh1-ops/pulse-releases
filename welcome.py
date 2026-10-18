@@ -1,9 +1,87 @@
 """Scrollable first-run authentication and explicit local sign-in."""
-import hashlib,hmac,json
-from PySide6.QtCore import Qt,QTimer,QRect,QEvent
+import hashlib,hmac,json,re,shutil,uuid
+from PySide6.QtCore import Qt,QTimer,QRect,QEvent,QUrl
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget,QHBoxLayout,QLabel,QLayout
 
 class Welcome:
+    def __init__(self):
+        super().__init__()
+        if self.profile:self.remember_profile(self.profile)
+
+    def build_profile(self):
+        super().build_profile()
+        form=self.profile_dialog.body.layout().itemAt(0).widget()
+        self.profile_signout=self.button('Выйти',self.logout_profile)
+        self.profile_signout.setToolTip('Выйти из профиля Pulse и открыть вход / регистрацию')
+        form.layout().itemAt(0).layout().addWidget(self.profile_signout)
+
+    def stored_profiles(self):
+        try:
+            path=self.data_dir/'profiles.json'
+            if path.stat().st_size>2*1024*1024:return {}
+            profiles=json.loads(path.read_text(encoding='utf8'))
+            return {key:row for key,row in profiles.items() if isinstance(row,dict)} if isinstance(profiles,dict) else {}
+        except (OSError,ValueError,TypeError):return {}
+
+    def remember_profile(self,profile):
+        if not profile.get('id'):return
+        profiles=self.stored_profiles();record=dict(profile)
+        record['_tour_completed']=(self.data_dir/'onboarding-v08.json').exists()
+        avatar=self.data_dir/'avatar.png'
+        if avatar.exists():
+            key=hashlib.sha256(str(profile['id']).encode()).hexdigest()+'.png'
+            folder=self.data_dir/'profile-avatars';folder.mkdir(parents=True,exist_ok=True)
+            shutil.copyfile(avatar,folder/key);record['_saved_avatar']=key
+        profiles[str(profile['id'])]=record
+        super().save_data('profiles.json',profiles)
+
+    def save_data(self,name,value):
+        super().save_data(name,value)
+        if name=='profile.json' and isinstance(value,dict) and value.get('id'):self.remember_profile(value)
+
+    def prepare_profile(self,record):
+        """Restore profile details without inheriting another identity's password."""
+        avatar=self.data_dir/'avatar.png';saved=record.get('_saved_avatar','')
+        if re.fullmatch(r'[a-f0-9]{64}\.png',saved) and (self.data_dir/'profile-avatars'/saved).exists():shutil.copyfile(self.data_dir/'profile-avatars'/saved,avatar)
+        else:avatar.unlink(missing_ok=True)
+        if record.get('_tour_completed'):super().save_data('onboarding-v08.json',{'completed':True})
+        else:(self.data_dir/'onboarding-v08.json').unlink(missing_ok=True)
+        if hasattr(self,'profile_avatar'):self.profile_avatar.pixmap=None;self.profile_avatar.update();self.profile_nav.setIcon(QIcon())
+        return {key:value for key,value in record.items() if not key.startswith('_')}
+
+    def profile_for_identity(self,identity):
+        profiles=self.stored_profiles()
+        record=next((p for p in profiles.values() if p.get('provider')==identity['provider'] and str(p.get('provider_id'))==str(identity['provider_id'])),None)
+        if record is None:record={'id':str(uuid.uuid4())}
+        profile=self.prepare_profile(record)
+        profile.pop('local_auth',None)
+        profile.update(name=identity['name'],email=identity.get('email',''),provider=identity['provider'],provider_id=identity['provider_id'])
+        return profile
+
+    def logout_profile(self):
+        if not self.profile:return
+        try:
+            self.remember_profile(self.profile)
+            # An explicit empty active profile keeps the next launch signed out;
+            # password hashes and profile details remain in the local account list.
+            super().save_data('profile.json',{})
+        except OSError:
+            self.profile_saved.setText('Не удалось сохранить выход. Проверь доступ к папке данных.');return
+        self.profile={};self.cancel_identity()
+        self.choice_generation+=1;self.resolve_generation+=1;self.lyrics_version+=1
+        self.choice_pending=False;self.loading_audio=False;self.restored_resume=None
+        if self.sc_import_running:self.cancel_soundcloud_import()
+        if self.tour:self.tour.hide();self.tour.deleteLater();self.tour=None
+        self.sign_out();self.media.stop();self.media.setSource(QUrl());self.home_rows=[]
+        self.seek.setRange(0,0);self.current_favorite.setChecked(False)
+        self.name_edit.clear();self.bio_edit.clear();self.profile_saved.clear();self.register_name.clear();self.register_email.clear();self.register_password.clear()
+        self.profile_nav.setToolTip('Вход в профиль Pulse');self.profile_nav.setIcon(QIcon())
+        self.profile_avatar.pixmap=None;self.profile_avatar.update()
+        self.hide_pages();self.open_registration();self.register_name.clear();self.register_email.clear()
+        self.register_error.setText('Выход выполнен. Войди снова или открой «Регистрация». Музыка и настройки сохранены на этом компьютере.')
+        self.fit_auth_form()
+
     def build_registration(self):
         super().build_registration()
         self.auth_mode='register'
@@ -56,7 +134,7 @@ class Welcome:
         self.register_button.setText('Войти' if login else 'Создать профиль')
         self.register_password.setPlaceholderText('Пароль' if login else 'Придумай пароль · минимум 6 символов')
         self.register_password.clear();self.register_error.clear()
-        self.local_auth_hint.setText('Локальный профиль не переносится между компьютерами автоматически.' if login else 'Локальная почта не проверяется. Пароль хранится в виде защищённого хеша.')
+        self.local_auth_hint.setText('Локальный профиль не переносится между компьютерами автоматически. Любимые и настройки общие для этой копии Pulse.' if login else 'Локальная почта не проверяется. Пароль хранится в виде защищённого хеша.')
         self.fit_auth_form()
         def top():
             scroll=self.registration.body.parentWidget().parentWidget()
@@ -68,14 +146,25 @@ class Welcome:
 
     def register_local(self):
         if getattr(self,'auth_mode','register')=='login':self.login_local();return
+        email=self.register_email.text().strip().casefold()
+        if any(p.get('local_auth') and p.get('provider') not in ('google','telegram') and p.get('email','').casefold()==email for p in self.stored_profiles().values()):
+            self.register_error.setText('Этот локальный профиль уже сохранён. Открой «Вход» и введи его пароль.');return
+        valid=len(self.register_name.text().strip())>=2 and re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+',email) and len(self.register_password.text())>=6
+        if valid:
+            if self.profile:self.remember_profile(self.profile)
+            self.profile=self.prepare_profile({})
         super().register_local()
 
     def login_local(self):
         try:
-            stored=json.loads((self.data_dir/'profile.json').read_text(encoding='utf8'))
+            profiles=self.stored_profiles()
+            current=json.loads((self.data_dir/'profile.json').read_text(encoding='utf8')) if (self.data_dir/'profile.json').exists() else {}
+            if current.get('id'):profiles[current['id']]=current
+            email=self.register_email.text().strip().casefold()
+            stored=next((p for p in profiles.values() if p.get('local_auth') and p.get('provider') not in ('google','telegram') and p.get('email','').casefold()==email),{})
             auth=stored.get('local_auth')
             if not auth:
-                self.register_error.setText('Локального входа с паролем здесь нет. Используй Google / Telegram или вкладку «Регистрация».');return
+                self.register_error.setText('На этом компьютере ещё нет локального профиля с этой почтой. Используй Google / Telegram или вкладку «Регистрация».');return
             iterations=int(auth['iterations'])
             if auth.get('algorithm')!='pbkdf2-sha256' or not 100000<=iterations<=1000000:raise ValueError()
             salt=bytes.fromhex(auth['salt']);expected=bytes.fromhex(auth['hash'])
@@ -85,5 +174,5 @@ class Welcome:
         except (OSError,ValueError,TypeError,KeyError):
             self.register_error.setText('На этом компьютере ещё нет локального профиля. Открой «Регистрация» или войди через Google / Telegram.');return
         if not valid:self.register_error.setText('Почта или пароль не совпадают. Проверь их и попробуй снова.');return
-        self.profile=stored;self.register_password.clear();self.name_edit.setText(stored.get('name',''));self.refresh_profile()
+        self.profile=self.prepare_profile(stored);self.save_data('profile.json',self.profile);self.register_password.clear();self.name_edit.setText(stored.get('name',''));self.bio_edit.setText(stored.get('bio',''));self.refresh_profile()
         self.registration.accept();self.set_registration_gate(False);self.maybe_tour()
