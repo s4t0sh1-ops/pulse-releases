@@ -1,3 +1,18 @@
+# Pulse — для ПК и Android
+
+| Устройство | Скачать | Статус |
+|---|---|---|
+| ПК · Windows 10/11 x64 | [Pulse 0.15 · EXE](https://github.com/s4t0sh1-ops/pulse-releases/releases/download/v0.15/Pulse-0.15.exe) | Windows-версия |
+| Телефон · Android 8+ | [Pulse Android 0.1.0 alpha 1 · APK](https://github.com/s4t0sh1-ops/pulse-releases/releases/download/android-v0.1.0-alpha1/Pulse-Android-0.1.0-alpha1.apk) | Тестовая альфа |
+
+[Выпуск Windows и исходники](https://github.com/s4t0sh1-ops/pulse-releases/releases/tag/v0.15) · [Выпуск Android и исходники](https://github.com/s4t0sh1-ops/pulse-releases/releases/tag/android-v0.1.0-alpha1)
+
+Android — отдельное приложение с мобильным интерфейсом. Полное соответствие ПК пока не достигнуто: настоящий сетевой звук и работа с заблокированным экраном на Samsung/Poco ещё проверяются. Пройдено 16 автоматических тестов. Google-вход и личный Яндекс в Android пока не перенесены. Локальные профили между телефоном и ПК не синхронизируются.
+
+Исходники Android, инструкции сборки и результаты тестов находятся в **Pulse-Android-source-0.1.0-alpha1.zip**. Windows-исходники — в **Pulse-source.zip**. Архивы не содержат личных профилей или серверных секретов.
+
+---
+
 # Pulse 0.15
 
 Windows-плеер. Готовый Pulse-0.15.exe копируется на рабочий стол. Личный профиль, пароли, токены сервисов и закрытый ключ обновлений не входят в сборку.
