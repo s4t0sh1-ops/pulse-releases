@@ -1,0 +1,10 @@
+{
+  "google": {
+    "client_id": "",
+    "client_secret": ""
+  },
+  "telegram": {
+    "server": "https://pulse-help.ddemonovic65.workers.dev",
+    "support_url": "https://t.me/PulseMusicHelpBot?start=support"
+  }
+}
