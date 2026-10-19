@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 import requests
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
-VERSION='0.17'
+VERSION='0.18'
 REPOSITORY='s4t0sh1-ops/pulse-releases'
 MANIFEST_URL=f'https://github.com/{REPOSITORY}/releases/latest/download/pulse-update.json'
 PUBLIC_KEY='rn5s1pF4Gt8eQE+dV7su19Kj7o3re5fGVvAf3U1l1QE='

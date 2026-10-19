@@ -85,7 +85,7 @@ class BasePlayer(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint,True)
-        self.setWindowTitle('Pulse 0.17')
+        self.setWindowTitle('Pulse 0.18')
         self.resize(1280,820)
         self.setMinimumSize(940,640)
         self.pool=QThreadPool(self);self.pool.setMaxThreadCount(3)
@@ -377,7 +377,7 @@ class BasePlayer(QMainWindow):
         self.theme[key] = value
         self.root.gl.settings = self.theme
         self.root.gl.update()
-        self.setWindowTitle('Pulse 0.17 · '+self.theme['title'])
+        self.setWindowTitle('Pulse 0.18 · '+self.theme['title'])
         self.refresh_theme_labels()
         self.theme_timer.start(350)
 
@@ -787,8 +787,9 @@ from upgrades import Upgrades
 from welcome import Welcome
 from release16 import Release16
 from import_ui import ImportUI
+from playlists_ui import Playlists
 
-class Player(Release16,Welcome,ImportUI,Upgrades,Polish,Refinement,Experience,Features,BasePlayer):
+class Player(Playlists,Release16,Welcome,ImportUI,Upgrades,Polish,Refinement,Experience,Features,BasePlayer):
     def __init__(self):
         self.data_dir=DATA
         super().__init__()
