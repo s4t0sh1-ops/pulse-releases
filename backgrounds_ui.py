@@ -1,5 +1,6 @@
 """Local, unmodified React Bits components hosted behind the native player."""
 import copy,json,sys,time
+from custom_background import ImageBackground,choose_background
 from pathlib import Path
 from PySide6.QtCore import Qt,QUrl,QTimer,QEvent
 from PySide6.QtGui import QColor,QCursor
@@ -40,7 +41,7 @@ SCHEMAS={
  ('Перемешивание курсором','stir',.5,0,3,.01),('Блеск','sheen',.3,0,2,.01),('Вихрь от нажатия','clickSwirl',True),
  ('Зерно','grain',0,0,1,.001),('Затухание','fade',0,0,1,.01),('Непрозрачность','opacity',1,0,1,.01),
  ('Разрешение','resolution',1,.1,2,.01)]}
-NAMES={'vortex':'Liquid Metal Vortex','chrome':'Liquid Chrome','veil':'Dark Veil','silk':'Silk','iridescence':'Iridescence'}
+NAMES={'vortex':'Liquid Metal Vortex','chrome':'Liquid Chrome','veil':'Dark Veil','silk':'Silk','iridescence':'Iridescence','custom':'Своя картинка'}
 
 def defaults():
     return {'effect':'vortex','intensity':.55,'edge':.8,'blur':0.,'performance':'balanced','props':{k:{x[1]:x[2] for x in rows} for k,rows in SCHEMAS.items()}}
@@ -81,10 +82,10 @@ class EffectView(QWebEngineView):
 
 class Backgrounds:
     def __init__(self,player):
-        self.player=player;self.data=defaults();self.web=None;self.preview=None;self.editor=None;self.last_mouse=None
+        self.player=player;self.data=defaults();self.web=None;self.custom=None;self.preview=None;self.editor=None;self.last_mouse=None
         try:
             saved=json.loads((player.data_dir/'backgrounds.json').read_text(encoding='utf8'))
-            for k in ('effect','intensity','edge','blur','performance'):
+            for k in ('effect','intensity','edge','blur','performance','custom_file'):
                 if k in saved:self.data[k]=saved[k]
             for k,v in saved.get('props',{}).items():
                 if k in self.data['props']:self.data['props'][k].update(v)
@@ -104,6 +105,21 @@ class Backgrounds:
                 'edge':0 if preview else self.data['edge'],'blur':0 if preview else self.data['blur']}
     def apply(self):
         root=self.player.root;native=self.data['effect']=='vortex'
+        if self.data['effect']=='custom':
+            root.gl.hide();root.gl.timer.stop();self.timer.stop()
+            if self.web:self.web.hide();self.web.configure(dict(self.config(),effect='',paused=True))
+            if self.custom is None:
+                from PySide6.QtWidgets import QGraphicsBlurEffect
+                self.custom=ImageBackground(root,self.data);self.custom_blur=QGraphicsBlurEffect(self.custom);self.custom.setGraphicsEffect(self.custom_blur)
+            self.custom_blur.setBlurRadius(float(self.data.get('blur',0)))
+            path=self.data.get('custom_file','')
+            if getattr(self.custom,'loaded_path',None)!=path:self.custom.load(path);self.custom.loaded_path=path
+            self.custom.setGeometry(root.rect());self.custom.lower();self.custom.show();self.custom.update()
+            if self.preview:self.preview.hide();self.preview.configure(dict(self.config(),effect='',paused=True))
+            return
+        if self.custom:self.custom.hide()
+        if not root.gl.timer.isActive():root.gl.timer.start()
+
         mode=self.data.get('performance','balanced');root.gl.scene_fps={'eco':24,'balanced':30,'high':50}.get(mode,30);root.gl.render_width={'eco':260,'balanced':360,'high':440}.get(mode,360)
         root.gl.timer.setInterval(16 if mode=='high' else 33)
         root.gl.setVisible(native)
@@ -116,6 +132,7 @@ class Backgrounds:
         if self.preview:
             self.preview.configure(self.config(True) if self.preview.isVisible() else dict(self.config(True),effect='',paused=True))
     def resize(self):
+        if self.custom:self.custom.setGeometry(self.player.root.rect())
         if self.web:self.web.setGeometry(self.player.root.rect())
     def pointer(self,kind='pointermove'):
         if not self.web or not self.web.isVisible() or self.player.isMinimized():return
@@ -132,6 +149,7 @@ class Backgrounds:
         self.editor=QWidget(parent);box=QVBoxLayout(self.editor);box.setContentsMargins(0,0,0,0);box.setSpacing(16)
         label=QLabel('Фон приложения');label.setStyleSheet('font-size:20px;font-weight:600');box.addWidget(label)
         select=QComboBox();select.setMinimumHeight(46);select.setObjectName('backgroundSelect');[select.addItem(v,k) for k,v in NAMES.items()];select.setCurrentIndex(list(NAMES).index(self.data['effect']));box.addWidget(select)
+        box.addWidget(self.player.button('Выбрать свою картинку',lambda:choose_background(self)))
         self.parameters=QWidget();self.parameters_box=QVBoxLayout(self.parameters);self.parameters_box.setContentsMargins(0,0,0,0);self.parameters_box.setSpacing(15);box.addWidget(self.parameters)
         self.preview=EffectView(parent);self.preview.setMinimumSize(260,200);self.preview.setMaximumHeight(250);box.addWidget(self.preview)
         self.preview.hide()
@@ -154,9 +172,11 @@ class Backgrounds:
         while layout.count():
             item=layout.takeAt(0)
             if item.widget():item.widget().deleteLater()
-        effect=self.data['effect'];native=effect=='vortex'
-        self.preview.hide();self.preview_caption.hide();self.preview_toggle.setVisible(not native);self.preview_toggle.setText('Показать предпросмотр');self.appearance_group.setVisible(not native)
-        if not native:
+        effect=self.data['effect'];native=effect=='vortex';custom=effect=='custom'
+        self.preview.hide();self.preview_caption.hide();self.preview_toggle.setVisible(not native and not custom);self.preview_toggle.setText('Показать предпросмотр');self.appearance_group.setVisible(not native)
+        if custom:
+            layout.addWidget(QLabel('Своя картинка · хранится только на этом компьютере'))
+        if not native and not custom:
             advanced=QWidget();advanced_box=QVBoxLayout(advanced);advanced_box.setContentsMargins(0,0,0,0);advanced_box.setSpacing(15)
             fold=self.player.button('Тонкая настройка  +',lambda:None);fold.setCheckable(True);advanced_box.addWidget(fold)
             advanced_body=QWidget();advanced_inner=QVBoxLayout(advanced_body);advanced_inner.setContentsMargins(8,8,8,8);advanced_inner.setSpacing(17);advanced_box.addWidget(advanced_body);advanced_body.hide()
@@ -171,7 +191,9 @@ class Backgrounds:
         visible=not self.preview.isVisible();self.preview.setVisible(visible);self.preview_caption.setVisible(visible)
         self.preview_toggle.setText('Скрыть предпросмотр' if visible else 'Показать предпросмотр');self.apply()
     def reset_current(self):
-        effect=self.data['effect'];self.data['props'][effect]=defaults()['props'][effect];self.rebuild();self.save_timer.start(350)
+        effect=self.data['effect']
+        if effect=='custom':self.data['effect']='vortex';self.selector.setCurrentIndex(0);self.rebuild();self.save();return
+        self.data['props'][effect]=defaults()['props'][effect];self.rebuild();self.save_timer.start(350)
     def add_control(self,layout,schema,callback,values=None):
         label,key,default,*bounds=schema;value=(values or {}).get(key,default)
         host=QWidget();v=QVBoxLayout(host);v.setContentsMargins(0,0,0,0);v.setSpacing(6)

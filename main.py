@@ -85,7 +85,7 @@ class BasePlayer(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint,True)
-        self.setWindowTitle('Pulse 0.16')
+        self.setWindowTitle('Pulse 0.17')
         self.resize(1280,820)
         self.setMinimumSize(940,640)
         self.pool=QThreadPool(self);self.pool.setMaxThreadCount(3)
@@ -377,7 +377,7 @@ class BasePlayer(QMainWindow):
         self.theme[key] = value
         self.root.gl.settings = self.theme
         self.root.gl.update()
-        self.setWindowTitle('Pulse 0.16 · '+self.theme['title'])
+        self.setWindowTitle('Pulse 0.17 · '+self.theme['title'])
         self.refresh_theme_labels()
         self.theme_timer.start(350)
 

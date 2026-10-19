@@ -2,12 +2,16 @@
 
 | Устройство | Скачать | Статус |
 |---|---|---|
-| Windows 10/11 x64 | [Pulse 0.16 · EXE](https://github.com/s4t0sh1-ops/pulse-releases/releases/download/v0.16/Pulse-0.16.exe) | Windows |
-| Android 8+ | [Pulse Android alpha 3 · APK](https://github.com/s4t0sh1-ops/pulse-releases/releases/download/android-v0.1.0-alpha3/Pulse-Android-0.1.0-alpha3.apk) | Тестовая альфа |
+| Windows 10/11 x64 | [Pulse 0.17 · EXE](https://github.com/s4t0sh1-ops/pulse-releases/releases/download/v0.17/Pulse-0.17.exe) | Windows |
+| Android 8+ | [Pulse Android alpha 4 · APK](https://github.com/s4t0sh1-ops/pulse-releases/releases/download/android-v0.1.0-alpha4/Pulse-Android-0.1.0-alpha4.apk) | Тестовая альфа |
 
-[Выпуск Windows](https://github.com/s4t0sh1-ops/pulse-releases/releases/tag/v0.16) · [Выпуск Android](https://github.com/s4t0sh1-ops/pulse-releases/releases/tag/android-v0.1.0-alpha3)
+[Выпуск Windows](https://github.com/s4t0sh1-ops/pulse-releases/releases/tag/v0.17) · [Выпуск Android](https://github.com/s4t0sh1-ops/pulse-releases/releases/tag/android-v0.1.0-alpha4)
 
-## В этих версиях
+## Новое в 0.17 / alpha 4
+
+Свой фон из картинки на ПК и телефоне. В Windows — сворачиваемые компактные альбомы, ровные названия, тонкий скроллбар и уменьшенная шапка артиста. В Android — обложка и открытие мини-плеера, мягкие вкладки, новая шапка волны, тёмное меню с затемнением/блюром, адаптивная иконка P и название Pulse без α.
+
+## Сохранённые возможности
 
 - Альбомы исполнителей с названиями, обложками и открытием песен. Яндекс и Audius подгружают страницы автоматически. Полнота и доступность каталога определяются источником.
 - «Для вас» учитывает любимых исполнителей, жанры и историю прослушивания.
@@ -19,14 +23,14 @@
 
 ## Проверки
 
-Android: 28 автоматических тестов, сборка приложения и тестового APK, Lint без ошибок, подпись прежним сертификатом. Windows: проверки рекомендаций, полного прохода страниц альбомов, простого импорта, обязательного окна обновления, запуск исходников и готового EXE с независимой папкой данных. Сетевые ответы каталогов Яндекса, Audius и SoundCloud проверены отдельно.
+Android: 30 автоматических тестов, сборка приложения и тестового APK, Lint без ошибок, подпись прежним сертификатом. Windows: проверки рекомендаций, полного прохода страниц альбомов, простого импорта, обязательного окна обновления, запуск исходников и готового EXE с независимой папкой данных. Сетевые ответы каталогов Яндекса, Audius и SoundCloud проверены отдельно.
 
 Реальное сетевое прослушивание и длительная фоновая работа Android на Samsung/Poco остаются этапом проверки на физическом телефоне. APK подписан отладочным ключом для тестирования. Подписанные каналы и контрольные суммы защищают обновления от подмены, но не доказывают отсутствие ошибок.
 
 ## Открытые исходники
 
-- [Полный Windows-проект и сервер](Pulse-source.zip); отдельный архив `Pulse-source-0.16.zip` в выпуске Windows. Основные Python-файлы доступны непосредственно в репозитории.
-- [Android-проект](Pulse-Android-source-0.1.0-alpha3.zip) и [инструкция Android](ANDROID.md).
+- [Полный Windows-проект и сервер](Pulse-source.zip); отдельный архив `Pulse-source-0.17.zip` в выпуске Windows. Основные Python-файлы доступны непосредственно в репозитории.
+- [Android-проект](Pulse-Android-source-0.1.0-alpha4.zip) и [инструкция Android](ANDROID.md).
 - Приватные ключи подписи, токены бота, сессии сервисов и личные профили в исходники не включаются. Публичный Windows `identity-config.json` содержит пустую конфигурацию Google: для собственной сборки зарегистрируй свой настольный OAuth-клиент. Готовый официальный EXE настроен для входа.
 
 Windows: Python 3.12 x64. Распакуй полный архив и в папке Pulse-source выполни:

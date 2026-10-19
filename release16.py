@@ -3,6 +3,7 @@ import os,sys,time
 from PySide6.QtCore import Qt,QTimer
 from PySide6.QtWidgets import QWidget,QLabel,QVBoxLayout,QHBoxLayout,QScrollArea,QDialog,QProgressBar
 from library_ui import Artwork
+from album_ui import AlbumCard,AlbumScroll
 import updates
 from catalog_extensions import albums,album_tracks,rank_for_you
 
@@ -15,9 +16,9 @@ class Release16:
         self.reco_signature=None;self.reco_pending=False;self.album_generation=0;self.required_update=False
         super().__init__()
         self.album_panel=QWidget();box=QVBoxLayout(self.album_panel);box.setContentsMargins(0,0,0,0)
-        self.album_heading=QLabel('Альбомы');box.addWidget(self.album_heading)
-        self.album_scroll=QScrollArea();self.album_scroll.setWidgetResizable(True);self.album_scroll.setFixedHeight(170);self.album_scroll.setFrameShape(QScrollArea.Shape.NoFrame)
-        self.album_host=QWidget();self.album_cards=QHBoxLayout(self.album_host);self.album_scroll.setWidget(self.album_host);box.addWidget(self.album_scroll)
+        head=QHBoxLayout();self.album_heading=QLabel('Альбомы');head.addWidget(self.album_heading);head.addStretch();self.album_toggle=self.button('Показать',self.toggle_albums);self.album_toggle.setFixedHeight(30);head.addWidget(self.album_toggle);box.addLayout(head)
+        self.album_scroll=AlbumScroll();self.album_scroll.setWidgetResizable(True);self.album_scroll.setFixedHeight(138);self.album_scroll.setFrameShape(QScrollArea.Shape.NoFrame);self.album_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff);self.album_scroll.setStyleSheet('QScrollArea{background:transparent;border:0;} QScrollBar:horizontal{height:4px;background:transparent;margin:0;} QScrollBar::handle:horizontal{background:#68616e;border-radius:2px;min-width:40px;} QScrollBar::handle:horizontal:hover{background:#b0a3b4;} QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal{width:0;height:0;} QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal{background:transparent;}');self.album_scroll.hide()
+        self.album_host=QWidget();self.album_cards=QHBoxLayout(self.album_host);self.album_cards.setContentsMargins(0,0,0,4);self.album_cards.setSpacing(8);self.album_scroll.setWidget(self.album_host);box.addWidget(self.album_scroll)
         layout=self.content_host.layout();layout.insertWidget(layout.indexOf(self.artist_shelf)+1,self.album_panel);self.album_panel.hide()
         self.update_auto.setChecked(True);self.update_auto.hide()
         self.update_text.setText('Новые версии загружаются и устанавливаются автоматически. Профиль и библиотека сохраняются.')
@@ -27,16 +28,17 @@ class Release16:
         super().open_artist(artist)
         self.album_generation+=1;generation=self.album_generation
         if not hasattr(self,'album_panel'):return
-        self.album_panel.show();self.clear_layout(self.album_cards);self.album_heading.setText('Загружаем альбомы…')
+        self.album_panel.show();self.album_scroll.hide();self.album_toggle.setText('Показать');self.library_hero.setFixedHeight(156);self.hero_art.setFixedSize(112,112);self.heading.setStyleSheet('font-size:30px;font-weight:800;');self.clear_layout(self.album_cards);self.album_heading.setText('Загружаем альбомы…')
         def done(rows):
             if generation!=self.album_generation or self.view!='artist':return
             self.album_heading.setText('Альбомы · '+str(len(rows)) if rows else 'Источник не вернул альбомы')
             for album in rows:
-                card=QWidget();card.setFixedWidth(142);box=QVBoxLayout(card);box.setContentsMargins(5,4,5,4)
-                art=Artwork(90);self.cover_loader.load(album.get('cover'),art);box.addWidget(art)
-                button=self.button(album['title'],lambda checked=False,a=album:self.open_album(a));button.setToolTip(album['title']+' · '+album['year']);box.addWidget(button);self.album_cards.addWidget(card)
+                self.album_cards.addWidget(AlbumCard(album,self.cover_loader,self.open_album))
             self.album_cards.addStretch()
         job=self.task(lambda _:albums(self,dict(artist)),done);job.albums_job=True;job.albums_generation=generation
+
+    def toggle_albums(self):
+        expanded=self.album_scroll.isHidden();self.album_scroll.setVisible(expanded);self.album_toggle.setText('Скрыть' if expanded else 'Показать')
 
     def open_album(self,album):
         self.album_generation+=1;generation=self.album_generation;self.status.setText('Открываю альбом…')
