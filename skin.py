@@ -279,7 +279,7 @@ class VortexSurface(QWidget):
         painter.fillRect(self.rect(), QColor('#08090b'))
 
 
-def draw_icon(painter, icon, color, size=22):
+def draw_icon(painter, icon, color, size=22, filled=False):
     painter.save()
     painter.scale(size / 24, size / 24)
     painter.setPen(QPen(color, 1.45, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
@@ -318,6 +318,8 @@ def draw_icon(painter, icon, color, size=22):
         line(18,3,21,6);line(21,6,18,9);line(18,15,21,18);line(21,18,18,21)
     elif icon == 'heart':
         path.moveTo(12,20);path.cubicTo(9,18,3,13,3,8);path.cubicTo(3,2,10,2,12,7);path.cubicTo(14,2,21,2,21,8);path.cubicTo(21,13,15,18,12,20)
+    elif icon == 'dislike':
+        path.moveTo(5,3);path.lineTo(16,3);path.quadTo(18,3,18,5);path.lineTo(17,12);path.lineTo(13,12);path.lineTo(13,19);path.quadTo(10,22,9,18);path.lineTo(8,13);path.lineTo(5,10);path.closeSubpath();path.addRoundedRect(QRectF(20,3,2,9),.6,.6)
     elif icon == 'settings':
         for x,y in ((6,7),(12,16),(18,9)):
             line(x,3,x,y-3);line(x,y+3,x,21);path.addEllipse(QRectF(x-2.5,y-2.5,5,5))
@@ -336,6 +338,7 @@ def draw_icon(painter, icon, color, size=22):
     elif icon == 'support':
         path.moveTo(4,13);path.cubicTo(4,1,20,1,20,13);path.addRoundedRect(QRectF(2,11,4,8),2,2);path.addRoundedRect(QRectF(18,11,4,8),2,2)
         path.moveTo(20,18);path.quadTo(20,22,13,22);line(11,22,14,22)
+    if filled and icon in ('heart','dislike'):painter.setBrush(color)
     painter.drawPath(path)
     painter.restore()
 
@@ -349,6 +352,10 @@ class MetalButton(QPushButton):
         self.press_value = 0.
         self.pulse_value = 1.
         self.phase = 0.
+        self.feedback_value=0.
+        self.feedback_animation=QVariantAnimation(self);self.feedback_animation.setDuration(200);self.feedback_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self.feedback_animation.valueChanged.connect(self.feedback_changed)
+        self.toggled.connect(lambda checked:self.animate(self.feedback_animation,self.feedback_value,1. if checked else 0.))
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setMinimumHeight(44)
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
@@ -392,6 +399,9 @@ class MetalButton(QPushButton):
     def press_changed(self, value):
         self.press_value=float(value);self.update()
 
+    def feedback_changed(self,value):
+        self.feedback_value=float(value);self.update()
+
     def pulse_changed(self,value):
         self.pulse_value=float(value);self.update()
 
@@ -418,6 +428,7 @@ class MetalButton(QPushButton):
         if not self.isEnabled():painter.setOpacity(.40)
         painter.translate(self.width()/2,self.height()/2+self.press_value)
         scale=1.-self.press_value*.045
+        if self.glyph in ('heart','dislike'):scale+=.035*math.sin(math.pi*self.feedback_value)
         painter.scale(scale,scale)
         rect=QRectF(-self.width()/2+2,-self.height()/2+2,self.width()-4,self.height()-4)
         radius=rect.height()/2
@@ -441,20 +452,23 @@ class MetalButton(QPushButton):
             sheen.setColorAt(1,QColor(255,255,255,0))
             painter.setBrush(sheen);painter.drawRoundedRect(inner,radius,radius)
         painter.restore()
-        if self.pulse_value<1:
+        if self.pulse_value<1 and self.glyph not in ('heart','dislike'):
             glow=QColor(211,224,237,int(105*(1-self.pulse_value)))
             painter.setPen(QPen(glow,1.5));painter.setBrush(Qt.BrushStyle.NoBrush)
             inset=(1-self.pulse_value)*rect.height()*.23
             pulse=rect.adjusted(inset,inset,-inset,-inset)
             painter.drawRoundedRect(pulse,pulse.height()/2,pulse.height()/2)
         color=QColor('#ffffff' if self.hover_value>.2 or self.primary else '#b9b9c2')
-        if self.isCheckable() and self.isChecked():color=QColor('#f3b7bc')
+        if self.glyph in ('heart','dislike'):
+            target=QColor('#ee667b' if self.glyph=='heart' else '#aaa0f0');v=self.feedback_value
+            color=QColor(round(color.red()*(1-v)+target.red()*v),round(color.green()*(1-v)+target.green()*v),round(color.blue()*(1-v)+target.blue()*v))
+        elif self.isCheckable() and self.isChecked():color=QColor('#f3b7bc')
         if not self.icon().isNull():
             clip=QPainterPath();clip.addEllipse(QRectF(-13,-13,26,26));painter.setClipPath(clip)
             painter.drawPixmap(-13,-13,self.icon().pixmap(26,26))
         elif self.glyph:
             painter.translate(-11,-11)
-            draw_icon(painter,self.glyph,color)
+            draw_icon(painter,self.glyph,color,filled=self.isChecked())
         else:
             painter.setPen(color)
             painter.setFont(QFont('Manrope',10,QFont.Weight.DemiBold if self.primary else QFont.Weight.Normal))

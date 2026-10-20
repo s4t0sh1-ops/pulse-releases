@@ -62,7 +62,7 @@ class Refinement:
         from identity import GoogleSignIn,TelegramSignIn
         self.cancel_identity();generation=self.identity_generation;config=self.identity_config.get(provider)
         if not config:self.register_error.setText('Этот способ входа пока не настроен.');return
-        try:flow=GoogleSignIn(config) if provider=='google' else TelegramSignIn(config)
+        try:flow=GoogleSignIn(config) if provider=='google' else TelegramSignIn(dict(config,_data_dir=str(self.data_dir)))
         except Exception:self.register_error.setText('Не удалось начать вход. Попробуй ещё раз.');return
         self.identity_flow=flow;self.register_button.setEnabled(False)
         for button in self.identity_buttons:button.setEnabled(False)

@@ -41,7 +41,7 @@ class GoogleSignIn:
         finally:self.server.server_close()
 
 class TelegramSignIn:
-    def __init__(self,config):self.base=config['server'].rstrip('/');self.cancelled=False
+    def __init__(self,config):self.base=config['server'].rstrip('/');self.cancelled=False;self.folder=config.get('_data_dir')
     def begin(self):
         response=requests.post(self.base+'/challenge',json={},timeout=(5,10));response.raise_for_status();self.challenge=response.json()
         url=self.challenge['url']
@@ -52,7 +52,11 @@ class TelegramSignIn:
         while time.monotonic()<deadline and not self.cancelled:
             response=requests.post(self.base+'/poll',json={'id':self.challenge['id'],'secret':self.challenge['secret']},timeout=(5,10))
             response.raise_for_status();result=response.json()
-            if result.get('identity'):return dict(result['identity'],provider='telegram')
+            if result.get('identity'):
+                if result.get('session') and self.folder:
+                    from cloud_sync import save_session
+                    save_session(self.folder,result['identity']['provider_id'],result['session']['token'])
+                return dict(result['identity'],provider='telegram')
             if result.get('cancelled'):raise SignInError()
             time.sleep(2)
         raise SignInError()

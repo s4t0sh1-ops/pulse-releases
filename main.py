@@ -788,8 +788,10 @@ from welcome import Welcome
 from release16 import Release16
 from import_ui import ImportUI
 from playlists_ui import Playlists
+from cloud_sync import CloudSync
+from feedback_ui import FeedbackUI
 
-class Player(Playlists,Release16,Welcome,ImportUI,Upgrades,Polish,Refinement,Experience,Features,BasePlayer):
+class Player(CloudSync,FeedbackUI,Playlists,Release16,Welcome,ImportUI,Upgrades,Polish,Refinement,Experience,Features,BasePlayer):
     def __init__(self):
         self.data_dir=DATA
         super().__init__()
