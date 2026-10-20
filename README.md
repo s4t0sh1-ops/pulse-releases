@@ -4,10 +4,12 @@
 
 | Платформа | Скачать |
 |---|---|
-| Windows 0.19 | [Pulse-0.19.exe](https://github.com/s4t0sh1-ops/pulse-releases/releases/download/v0.19/Pulse-0.19.exe) |
-| Android 0.1.0 alpha 7 | [Pulse-Android-0.1.0-alpha7.apk](https://github.com/s4t0sh1-ops/pulse-releases/releases/download/android-v0.1.0-alpha7/Pulse-Android-0.1.0-alpha7.apk) |
+| Windows 0.20 | [Pulse-0.20.exe](https://github.com/s4t0sh1-ops/pulse-releases/releases/download/v0.20/Pulse-0.20.exe) |
+| Android 0.1.0 alpha 8 | [Pulse-Android-0.1.0-alpha8.apk](https://github.com/s4t0sh1-ops/pulse-releases/releases/download/android-v0.1.0-alpha8/Pulse-Android-0.1.0-alpha8.apk) |
 
 ## Новое
+
+Дизлайк сразу переключает песню в Windows и Android, пропускает уже отвергнутые записи и исключает их из автоматических рекомендаций. Снятие отметки не меняет воспроизведение. На ПК аккуратнее контур и направление иконки.
 
 Лайки синхронизируются между Android и Windows через Telegram-аккаунт, включая удаление и изменения без сети. Для активации один раз заново войди через Telegram на обоих устройствах. Яндекс подключается отдельно на каждом устройстве; его токен не отправляется на сервер Pulse. Дизлайки пока локальные.
 
@@ -19,7 +21,7 @@ Windows: `pip install -r requirements.txt`, затем `python main.py`. Для 
 
 Конфигурация Google в публичных исходниках пустая: для своей сборки зарегистрируй OAuth-клиент и заполни identity-config.json. Telegram-сервер и его исходники находятся в общем архиве Pulse-source.zip; секрет бота и ключи развёртывания не включены. Cloudflare Worker использует существующую привязку D1 `DB`; таблицы синхронизации создаются автоматически.
 
-53 Android-теста, Lint без ошибок, проверка интерфейса и запуска EXE, локальная проверка синхронизации клиента с Worker через HTTP/SQLite. Физический телефон и настоящий вход с двумя устройствами пока не проверены. Android остаётся тестовой альфой.
+54 Android-теста, Lint без ошибок, проверка интерфейса и запуска EXE, локальная проверка синхронизации клиента с Worker через HTTP/SQLite. Физический телефон и настоящий вход с двумя устройствами пока не проверены. Android остаётся тестовой альфой.
 
 ## Сохранённые возможности
 

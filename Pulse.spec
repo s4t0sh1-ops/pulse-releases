@@ -12,5 +12,5 @@ a = Analysis(
 a.binaries = [(dest, src, kind) for dest, src, kind in a.binaries
               if Path(dest).name.lower() != 'icuuc.dll']
 pyz = PYZ(a.pure)
-exe = EXE(pyz, a.scripts, a.binaries, a.datas, [], name='Pulse-0.19', debug=False,
+exe = EXE(pyz, a.scripts, a.binaries, a.datas, [], name='Pulse-0.20', debug=False,
           bootloader_ignore_signals=False, strip=False, upx=True, console=False,icon=str(Path(SPECPATH)/'pulse.ico'))

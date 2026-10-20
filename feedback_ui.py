@@ -50,6 +50,20 @@ class FeedbackUI:
             self.home_rows=[r for r in self.home_rows if not self.disliked(r)]
         self.save_feedback();self.reco_signature=None;self.refresh_feedback()
         if self.view=='home':self.render(self.home_rows)
+        if not bad:self.skip_rejected_track()
+
+    def skip_rejected_track(self):
+        # A rejection skips immediately, including in a manual album or playlist.
+        self.feedback('skip')
+        candidate=self.current+1
+        while candidate<len(self.queue) and self.disliked(self.queue[candidate]):candidate+=1
+        if candidate<len(self.queue):self.play_index(candidate)
+        elif self.wave_mode:
+            self.want_playing=False;self.media.stop()
+            self.wave_waiting=True;self.next_wave_batch()
+        else:
+            self.want_playing=False;self.loading_audio=False;self.media.stop()
+            self.status.setText('Очередь закончилась.')
 
     def refresh_feedback(self):
         if not hasattr(self,'current_dislike'):return
@@ -75,8 +89,8 @@ class FeedbackUI:
         if self.view in ('home','wave'):rows=[r for r in rows if not self.disliked(r)]
         super().render(rows)
 
-    def play_index(self,index):
+    def play_index(self,index,resume=0,recovery=False):
         # Do not put a previously rejected track back into an automatically extended wave.
         if getattr(self,'wave_mode',False):
             while 0<=index<len(self.queue) and self.disliked(self.queue[index]):index+=1
-        super().play_index(index);self.refresh_feedback()
+        super().play_index(index,resume,recovery);self.refresh_feedback()

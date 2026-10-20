@@ -319,7 +319,15 @@ def draw_icon(painter, icon, color, size=22, filled=False):
     elif icon == 'heart':
         path.moveTo(12,20);path.cubicTo(9,18,3,13,3,8);path.cubicTo(3,2,10,2,12,7);path.cubicTo(14,2,21,2,21,8);path.cubicTo(21,13,15,18,12,20)
     elif icon == 'dislike':
-        path.moveTo(5,3);path.lineTo(16,3);path.quadTo(18,3,18,5);path.lineTo(17,12);path.lineTo(13,12);path.lineTo(13,19);path.quadTo(10,22,9,18);path.lineTo(8,13);path.lineTo(5,10);path.closeSubpath();path.addRoundedRect(QRectF(20,3,2,9),.6,.6)
+        # Cuff on the left, relaxed thumb pointing down on the right.
+        path.addRoundedRect(QRectF(3,3.5,3,9),.85,.85)
+        path.moveTo(9,3.5);path.lineTo(18.5,3.5)
+        path.cubicTo(20,3.5,20.6,4.5,20.2,6)
+        path.lineTo(18.8,11);path.quadTo(18.4,12.5,16.9,12.5)
+        path.lineTo(14,12.5);path.lineTo(14,18)
+        path.cubicTo(14,20.6,11.5,20.7,11,18.5)
+        path.lineTo(10.1,14.5);path.lineTo(8,11.8)
+        path.lineTo(8,4.5);path.quadTo(8,3.5,9,3.5);path.closeSubpath()
     elif icon == 'settings':
         for x,y in ((6,7),(12,16),(18,9)):
             line(x,3,x,y-3);line(x,y+3,x,21);path.addEllipse(QRectF(x-2.5,y-2.5,5,5))
