@@ -27,7 +27,7 @@ class Playlists:
     def add_to_playlist(self,identity,row):
         rows=self.playlists[identity]['tracks']
         if any(r['id']==row['id'] for r in rows):return False
-        rows.append(copy.deepcopy(row));self.persist_playlists();return True
+        rows.insert(0,copy.deepcopy(row));self.persist_playlists();return True
 
     def playlist_name(self,title,value=''):
         dialog=QInputDialog(self);dialog.setWindowTitle(title);dialog.setLabelText('Название плейлиста');dialog.setTextValue(value)

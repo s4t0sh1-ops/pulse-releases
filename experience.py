@@ -179,7 +179,7 @@ class Experience:
                 if self.view=='home' and not self.client:self.render(self.home_rows);self.status.clear()
             job=self.task(lambda _:self.audius.trending(limit=20),done);job.public_home=True
     def start_wave(self,seed=None):
-        if seed is None and not self.client and not (self.wave_mode and self.queue):
+        if seed is None and not self.client:
             candidates=[r for r in self.stats['history']+list(self.favorites.values()) if r.get('source') in ('audius','soundcloud')]
             if candidates:return super().start_wave(candidates[0])
             if self.home_rows:return super().start_wave(self.home_rows[0])

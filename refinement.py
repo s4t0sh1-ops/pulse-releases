@@ -35,7 +35,8 @@ class Refinement:
         try:
             self.wave_history=json.loads((self.data_dir/'wave-history.json').read_text(encoding='utf8'))
         except (OSError,ValueError):pass
-        self.setWindowTitle('Pulse 0.15')
+        from updates import VERSION
+        self.setWindowTitle('Pulse '+VERSION)
         self.root.installEventFilter(self);self.installEventFilter(self)
         QTimer.singleShot(0,lambda:self.round_window())
 

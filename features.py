@@ -29,7 +29,7 @@ class Features:
         self.resume_position=0;self.recoveries=0;self.last_advance=time.monotonic();self.last_stats_save=0
         self.suggestion_seq=0;self.artist_info=None;self.artist_page_index=0;self.extra_pages=[];self.home_reco_loading=False;self.home_rows=[]
         super().__init__()
-        self.setWindowTitle('Pulse 0.20 · '+self.theme.get('title','Pulse'))
+        self.setWindowTitle('Pulse 0.21 · '+self.theme.get('title','Pulse'))
         asset=Path(getattr(sys,'_MEIPASS',Path(__file__).parent))/'pulse.ico'
         if asset.exists():
             icon=QIcon(str(asset));self.setWindowIcon(icon);QApplication.instance().setWindowIcon(icon)
@@ -396,7 +396,6 @@ class Features:
         self.save_data('wave-seeds.json',self.wave_seeds);self.refresh_wave_seeds()
 
     def start_wave(self,seed=None):
-        if seed is None and self.wave_mode and self.queue:self.toggle();return
         personal=seed is None
         if seed is None and not self.client:
             candidates=[r for r in list(self.favorites.values())+self.stats['history'][:20] if r.get('source')=='soundcloud']
@@ -414,7 +413,7 @@ class Features:
             elif not seed:
                 liked=[r['id'] for r in self.favorites.values() if r.get('source','yandex')=='yandex']
                 if liked:seeds+=['track:'+i for i in random.sample(liked,min(2,len(liked)))]
-            session=client.rotor_session_new(seeds,include_tracks_in_response=True,queue=list(dict.fromkeys((self.wave_history.get(seed['id'],[]) if seed else [])+[r['id'] for r in self.stats['history'] if r.get('source')=='yandex']))[:60])
+            session=client.rotor_session_new(seeds,include_tracks_in_response=True,queue=list(dict.fromkeys((self.wave_history.get(seed['id'],[]) if seed else [])+[r['id'] for r in self.queue if r.get('source')=='yandex']+[r['id'] for r in self.stats['history'] if r.get('source')=='yandex']))[:60])
             if not session or not session.sequence:raise ValueError('empty_wave')
             rows=[dict(self.track_data(item.track),_wave_batch=session.batch_id) for item in session.sequence if item.track and item.track.available]
             return rows,{'source':'yandex','id':session.radio_session_id,'batch':session.batch_id,'seeds':seeds}

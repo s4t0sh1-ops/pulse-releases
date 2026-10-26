@@ -122,7 +122,8 @@ class Polish:
             self.likes_importing=False;self.import_yandex.setEnabled(True)
             if self.client is not client:self.import_result.setText('Аккаунт сменился. Повтори импорт.');return
             before=len(self.favorites)
-            for row in rows:self.favorites[row['id']]=row
+            incoming={row['id']:row for row in rows if row['id'] not in self.favorites}
+            self.favorites={**incoming,**self.favorites}
             self.save_data('favorites.json',self.favorites);self.refresh_profile()
             self.import_result.setText(f'Готово: добавлено {len(self.favorites)-before}, всего из Яндекса {len(rows)}. Повторных записей нет.')
         job=self.task(work,done);job.likes_import=True

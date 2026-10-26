@@ -11,7 +11,7 @@ class TitleBar(QWidget):
         super().__init__();self.player=player;self.setFixedHeight(38);self.setObjectName('titleBar')
         box=QHBoxLayout(self);box.setContentsMargins(10,0,0,0);box.setSpacing(8)
         logo=QLabel();logo.setPixmap(player.windowIcon().pixmap(20,20));box.addWidget(logo)
-        label=QLabel('PULSE');label.setStyleSheet('font-family:Manrope;font-size:11px;font-weight:800;letter-spacing:2px;color:#d3d4df');box.addWidget(label);box.addStretch()
+        label=QLabel('Pulse');label.setStyleSheet('font-family:Manrope;font-size:12px;font-weight:600;letter-spacing:.4px;color:#a5a4af');box.addWidget(label);box.addStretch()
         for glyph,tip,fn in [('minus','Свернуть',player.showMinimized),('maximize','Развернуть',self.maximize),('close','Закрыть',player.close)]:
             b=MetalButton(icon=glyph);b.setFixedSize(42,32);b.setToolTip(tip);b.clicked.connect(fn);box.addWidget(b)
     def maximize(self):self.player.showNormal() if self.player.isMaximized() else self.player.showMaximized()

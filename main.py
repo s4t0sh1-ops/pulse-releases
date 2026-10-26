@@ -25,7 +25,11 @@ from skin import STYLE, DEFAULTS, VortexSurface, MetalButton
 from library_ui import LIBRARY_STYLE, TrackList, TrackRow, CoverLoader, Artwork, ElidedLabel, TourOverlay
 from pages import InAppPage
 
-DATA = Path(os.environ.get('PULSE_DATA_DIR', os.environ.get('LOCALAPPDATA', str(Path.home())))) / 'PulseMusic-0.7.1'
+data_root = os.environ.get('PULSE_DATA_DIR', os.environ.get('LOCALAPPDATA', str(Path.home())))
+if '--data-dir' in sys.argv:
+    arg_index=sys.argv.index('--data-dir')+1
+    if arg_index<len(sys.argv):data_root=sys.argv[arg_index]
+DATA = Path(data_root) / 'PulseMusic-0.7.1'
 
 
 def protect(raw, decrypt=False):
@@ -416,7 +420,7 @@ class BasePlayer(QMainWindow):
             if row['id'] in self.favorites:
                 del self.favorites[row['id']]
             else:
-                self.favorites[row['id']] = row.copy()
+                self.favorites = {row['id']: row.copy(), **self.favorites}
             save_json(DATA/'favorites.json',self.favorites)
             self.current_favorite.setChecked(row['id'] in self.favorites)
             if self.view=='favorites':self.show_favorites()
@@ -673,7 +677,7 @@ class BasePlayer(QMainWindow):
         if row['id'] in self.favorites:
             del self.favorites[row['id']]
         else:
-            self.favorites[row['id']] = row.copy()
+            self.favorites = {row['id']: row.copy(), **self.favorites}
         if 0 <= self.current < len(self.queue):
             self.current_favorite.setChecked(self.queue[self.current]['id'] in self.favorites)
         try:

@@ -34,8 +34,10 @@ QTableWidget::item:hover {background:rgba(255,255,255,12);}
 QHeaderView {background:transparent;}
 QHeaderView::section {background:#101114;color:#81828a;border:0;padding:13px;}
 QTableCornerButton::section {background:#101114;border:0;}
-QScrollBar:vertical {width:6px;background:transparent;margin:6px 1px;}
-QScrollBar::handle:vertical {background:#44444b;min-height:30px;border-radius:3px;}
+QScrollBar:vertical {width:7px;background:transparent;margin:4px 1px;}
+QScrollBar::handle:vertical {background:rgba(190,181,196,85);min-height:36px;border-radius:3px;}
+QScrollBar::handle:vertical:hover {background:rgba(205,195,212,155);}
+QScrollBar::add-page:vertical,QScrollBar::sub-page:vertical {background:transparent;}
 QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical {height:0;}
 QSlider::groove:horizontal {height:3px;background:#323239;border-radius:1px;}
 QSlider::sub-page:horizontal {background:#d4c9cc;border-radius:1px;}

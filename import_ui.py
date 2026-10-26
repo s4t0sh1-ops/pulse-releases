@@ -44,9 +44,11 @@ class ImportUI:
         def done(result):
             if generation!=self.sc_import_generation:return
             self.finish_soundcloud_import();added=0;duplicates=0
+            incoming={}
             for row in result['rows']:
                 if row['id'] in self.favorites:duplicates+=1
-                else:self.favorites[row['id']]=row;added+=1
+                else:incoming[row['id']]=row;added+=1
+            self.favorites={**incoming,**self.favorites}
             self.save_data('favorites.json',self.favorites);self.refresh_profile()
             text=f'Добавлено: {added}. Уже были в любимых: {duplicates}.'
             if result['skipped']:text+=f' Не удалось прочитать ссылок: {result["skipped"]}.'
